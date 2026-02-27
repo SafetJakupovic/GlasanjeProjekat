@@ -46,7 +46,7 @@ public class RegistrationService {
         System.out.println("  Serial: " + cert.getSerialNumber());
         System.out.println("  KeyStore: " + ksPath);
 
-        users.put(username, new UserRecord(salt, pwHash, "ORGANIZATOR", cert.getSerialNumber(), ksPath));
+        users.put(username, new UserRecord(salt, pwHash, "ORGANIZER", cert.getSerialNumber(), ksPath));
     }
 
     // registracija glasaca
