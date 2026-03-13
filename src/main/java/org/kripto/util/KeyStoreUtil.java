@@ -74,7 +74,7 @@ public class KeyStoreUtil {
                         .setProvider("BC"),
                 password);
 
-        // ── Korak 7: Pisanje na disk ─────────────────────────────────────────
+        // upis na disk
         try (FileOutputStream fos = new FileOutputStream(filePath)) {
             // getEncoded() serializuje PKCS#12 u DER binarni format
             fos.write(pfx.getEncoded());

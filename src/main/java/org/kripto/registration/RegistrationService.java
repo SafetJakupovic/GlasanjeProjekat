@@ -7,6 +7,8 @@ import org.kripto.ca.VoterCA;
 import org.kripto.util.CryptoUtil;
 import org.kripto.util.KeyStoreUtil;
 
+import java.io.Serializable;
+import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -33,7 +35,7 @@ public class RegistrationService {
         KeyPair kp = CryptoUtil.generateRSAKeyPair();
         X500Name dn = new X500Name("CN=" + orgName + ", SERIALNUMBER=" + orgId + ", O=EVoting, C=BA");
         //izdaj sertifikat od orgca
-        X509Certificate cert = orgCA.issueOrgCert(dn, kp.getPublic(), orgName, orgId);
+        X509Certificate cert = orgCA.issueOrgCert(dn, kp.getPublic());
         // hashiranje lozinke
         byte[] salt = CryptoUtil.generateSalt();
         byte[] pwHash = CryptoUtil.hashPassword(password, salt);
@@ -46,7 +48,7 @@ public class RegistrationService {
         System.out.println("  Serial: " + cert.getSerialNumber());
         System.out.println("  KeyStore: " + ksPath);
 
-        users.put(username, new UserRecord(salt, pwHash, "ORGANIZER", cert.getSerialNumber(), ksPath));
+        users.put(username, new UserRecord(salt, pwHash, "ORGANIZER", cert.getSerialNumber(), ksPath, cert.getEncoded()));
     }
 
     // registracija glasaca
@@ -70,7 +72,7 @@ public class RegistrationService {
         System.out.println("  Serial: " + cert.getSerialNumber());
         System.out.println("  KeyStore: " + ksPath);
 
-        users.put(username, new UserRecord(salt, pwHash, "VOTER", cert.getSerialNumber(), ksPath));
+        users.put(username, new UserRecord(salt, pwHash, "VOTER", cert.getSerialNumber(), ksPath, cert.getEncoded()));
     }
 
     public Map<String, UserRecord> getUsers() {
@@ -85,20 +87,24 @@ public class RegistrationService {
         return voterCA;
     }
 
-    public static class UserRecord {
+    public static class UserRecord implements Serializable {
+        private static final long serialVersionUID = 1L;
         public final byte[] salt;
         public final byte[] passwordHash;
         public final String role;
-        public final java.math.BigInteger certSerial;
+        public final BigInteger certSerial;
         public final String keystorePath;
         public int failedAttempts = 0;
+        //public final X509Certificate certificate;
+        public final byte[] encodedCertificate;
 
-        public UserRecord(byte[] salt, byte[] passwordHash, String role, java.math.BigInteger certSerial, String keystorePath) {
+        public UserRecord(byte[] salt, byte[] passwordHash, String role, BigInteger certSerial, String keystorePath, byte[] encodedCertificate) {
             this.salt = salt;
             this.passwordHash = passwordHash;
             this.role = role;
             this.certSerial = certSerial;
             this.keystorePath = keystorePath;
+            this.encodedCertificate = encodedCertificate;
         }
     }
 }

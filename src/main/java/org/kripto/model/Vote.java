@@ -1,5 +1,7 @@
 package org.kripto.model;
 
+import java.awt.*;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -8,14 +10,18 @@ import java.time.Instant;
 // sami podaci enkriptovani su simetricnim aes kljucem
 // aes kljuc enkriptovan je asimetricnim rsa javnim kljucem organizatora
 // (samim tim samo organizator moze dekriptovani taj aes kljuc, tj. sadrzaj glasa)
-public class Vote {
+public class Vote implements Serializable {
+    private static final long serialVersionUID = 1L;
     public final String pollId;
+
     // aes enkriptovani izbor glasaca
     // sadrzaj utf8 string naziva opcije enkriptovan aes 256 gmc
     public final byte[] encryptedChoice;
+
     // aes kljuc enkriptovan rsa javnim kljucem organizatora
     public final byte[] encryptedAesKey;
     public final byte[] iv;
+
     // digitalni potpis glasaca potpisan privatnim kljucem glasaca, verifikuje se javnim kljucem iz sertifikata
     public final byte[] signature;
     public final BigInteger voterCertSerial;

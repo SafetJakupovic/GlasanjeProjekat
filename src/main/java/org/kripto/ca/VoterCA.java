@@ -9,9 +9,12 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.kripto.util.CryptoUtil;
+import org.kripto.util.KeyStoreUtil;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -24,10 +27,18 @@ public class VoterCA {
     private final X509Certificate certificate;
     private final List<BigInteger> revokedSerials = new ArrayList<>();
     private BigInteger serialCounter = BigInteger.TWO;
+    private final X509Certificate rootCACert;
 
     public VoterCA(RootCA rootCA) throws Exception {
         this.keyPair = CryptoUtil.generateRSAKeyPair();
         this.certificate = rootCA.signSubCA(DN, keyPair.getPublic(), 0);
+        this.rootCACert = rootCA.getCertificate();
+    }
+
+    public VoterCA(PrivateKey privateKey, X509Certificate certificate, RootCA rootCA) {
+        this.keyPair = new KeyPair(certificate.getPublicKey(), privateKey);
+        this.certificate = certificate;
+        this.rootCACert = rootCA.getCertificate();
     }
 
     public X509Certificate issueVoterCert(X500Name subjectDN, PublicKey subjectPub) throws Exception {
@@ -58,5 +69,18 @@ public class VoterCA {
 
     public X509Certificate getCertificate() {
         return certificate;
+    }
+
+    public void saveToDisk(String path, char[] password) throws Exception {
+        KeyStoreUtil.saveUserKeyStore("voter-ca", keyPair.getPrivate(),
+                certificate, rootCACert,
+                password, path);
+    }
+
+    public static VoterCA loadFromDisk(String path, char[] password, RootCA rootCA) throws Exception {
+        KeyStore ks = KeyStoreUtil.loadKeyStore(path, password);
+        PrivateKey privKey = KeyStoreUtil.getPrivateKey(ks, "voter-ca", password);
+        X509Certificate cert = KeyStoreUtil.getCertificate(ks, "voter-ca");
+        return new VoterCA(privKey, cert, rootCA); // novi konstruktor
     }
 }

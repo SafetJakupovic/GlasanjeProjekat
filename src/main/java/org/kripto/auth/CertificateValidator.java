@@ -55,7 +55,7 @@ public class CertificateValidator {
         } else if(issuerDN.equals(voterCADN)) {
             certType = "VOTER";
         } else {
-            return new ValidationResult(false, "Sertifikat nije izdat od poznatog CA.", null);
+            return new ValidationResult(false, "Sertifikat nije izdat od poznatog CA", null);
         }
 
         //verifikacija potpisa

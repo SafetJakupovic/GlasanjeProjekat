@@ -10,9 +10,12 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.kripto.util.CryptoUtil;
+import org.kripto.util.KeyStoreUtil;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -25,6 +28,12 @@ public class RootCA {
     public RootCA() throws Exception {
         this.keyPair = CryptoUtil.generateRSAKeyPair();
         this.certificate = selfSign();
+    }
+
+    // Novi konstruktor — učitava postojeće
+    public RootCA(PrivateKey privateKey, X509Certificate certificate) {
+        this.keyPair = new KeyPair(certificate.getPublicKey(), privateKey);
+        this.certificate = certificate;
     }
 
     private X509Certificate selfSign() throws Exception {
@@ -53,6 +62,25 @@ public class RootCA {
         builder.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.keyCertSign | KeyUsage.cRLSign));
 
         return new JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer));
+    }
+
+    /**
+     * Čuva Root CA privatni ključ i sertifikat u PKCS#12 fajl.
+     */
+    public void saveToDisk(String path, char[] password) throws Exception {
+        KeyStoreUtil.saveUserKeyStore("root-ca", keyPair.getPrivate(),
+                certificate, certificate, // self-signed, pa je i CA cert isti
+                password, path);
+    }
+
+    /**
+     * Učitava Root CA iz postojećeg PKCS#12 fajla.
+     */
+    public static RootCA loadFromDisk(String path, char[] password) throws Exception {
+        KeyStore ks = KeyStoreUtil.loadKeyStore(path, password);
+        PrivateKey privKey = KeyStoreUtil.getPrivateKey(ks, "root-ca", password);
+        X509Certificate cert = KeyStoreUtil.getCertificate(ks, "root-ca");
+        return new RootCA(privKey, cert); // novi konstruktor — vidi ispod
     }
 
     public KeyPair getKeyPair() {return keyPair;}
