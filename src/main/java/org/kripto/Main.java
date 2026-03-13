@@ -52,16 +52,21 @@ public class Main {
         regService.getUsers().putAll(UserStore.load());
         System.out.println("Ucitano " + regService.getUsers().size() + " korisnika\n");
 
+        orgCA.loadRevokedSerials(CAStore.loadOrgCRL());
+        voterCA.loadRevokedSerials(CAStore.loadVoterCRL());
+
         CertificateValidator validator = new CertificateValidator(rootCA, orgCA, voterCA);
         loginService = new LoginService(regService, validator);
 
         Files.createDirectories(Paths.get(ksDir));
 
-        // cuva korisnike pri gasenju
+        // shutdown hook, cuva korisnike pri gasenju
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 UserStore.save(regService.getUsers());
                 PollStore.save(new LinkedHashMap<>(pollService.getAllPolls()));
+                CAStore.saveOrgCRL(new ArrayList<>(orgCA.getRevokedSerials()));
+                CAStore.saveVoterCRL(new ArrayList<>(voterCA.getRevokedSerials()));
                 System.out.println("Podaci sacuvani");
             } catch (Exception e) {
                 System.out.println("Greska pri cuvanju: " + e.getMessage());

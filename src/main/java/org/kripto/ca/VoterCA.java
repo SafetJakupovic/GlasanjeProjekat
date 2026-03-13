@@ -18,6 +18,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -82,5 +83,13 @@ public class VoterCA {
         PrivateKey privKey = KeyStoreUtil.getPrivateKey(ks, "voter-ca", password);
         X509Certificate cert = KeyStoreUtil.getCertificate(ks, "voter-ca");
         return new VoterCA(privKey, cert, rootCA); // novi konstruktor
+    }
+
+    public void loadRevokedSerials(List<BigInteger> serials) {
+        revokedSerials.addAll(serials);
+    }
+
+    public List<BigInteger> getRevokedSerials() {
+        return Collections.unmodifiableList(revokedSerials);
     }
 }

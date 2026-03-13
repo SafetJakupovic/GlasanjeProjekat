@@ -17,6 +17,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -85,5 +86,13 @@ public class OrgCA {
         PrivateKey privKey = KeyStoreUtil.getPrivateKey(ks, "org-ca", password);
         X509Certificate cert = KeyStoreUtil.getCertificate(ks, "org-ca");
         return new OrgCA(privKey, cert, rootCA); // novi konstruktor
+    }
+
+    public void loadRevokedSerials(List<BigInteger> serials) {
+        revokedSerials.addAll(serials);
+    }
+
+    public List<BigInteger> getRevokedSerials() {
+        return Collections.unmodifiableList(revokedSerials);
     }
 }
